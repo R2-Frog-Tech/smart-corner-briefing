@@ -3,8 +3,10 @@ import { GoogleGenAI } from "@google/genai";
 import { BriefingData, Language } from "../types";
 
 export const generateProjectSummary = async (data: BriefingData, lang: Language): Promise<string> => {
-  // La API Key se obtiene exclusivamente de process.env.API_KEY configurada en Vercel
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) return "AI Summary unavailable: Missing API Key.";
+
+  const ai = new GoogleGenAI({ apiKey });
   
   const langMap: Record<Language, string> = {
     en: 'English',
@@ -13,22 +15,16 @@ export const generateProjectSummary = async (data: BriefingData, lang: Language)
   };
 
   const prompt = `
-    As an expert design and web development consultant, analyze the following client briefing and generate a professional structured summary in ${langMap[lang]}.
+    Analyze this creative briefing and generate a professional summary in ${langMap[lang]}.
+    Project: ${data.details.projectName}
+    Description: ${data.details.description}
+    Services: ${data.services.join(', ')}
+    Budget: ${data.timeline.budgetRange}
     
-    Project Data:
-    - Services: ${data.services.join(', ')}
-    - Name: ${data.details.projectName}
-    - Description: ${data.details.description}
-    - Audience: ${data.details.targetAudience}
-    - Timeline: ${data.timeline.deadline}
-    - Client Budget: ${data.timeline.budgetRange}
-    
-    The summary must include:
-    1. Executive summary of the need.
-    2. Key technical points to consider.
-    3. Initial professional recommendation.
-    
-    Maintain a professional and direct tone. Output only the summary in ${langMap[lang]}.
+    Format:
+    1. Need analysis.
+    2. Technical recommendations.
+    3. Suggested next steps.
   `;
 
   try {
@@ -38,7 +34,7 @@ export const generateProjectSummary = async (data: BriefingData, lang: Language)
     });
     return response.text || "Summary generation failed.";
   } catch (error) {
-    console.error("Error generating AI summary:", error);
-    return "Error processing the AI summary.";
+    console.error("Gemini Error:", error);
+    return "The system could not generate a summary, but your data has been sent.";
   }
 };
