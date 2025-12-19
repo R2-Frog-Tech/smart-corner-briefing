@@ -3,10 +3,11 @@ import { GoogleGenAI } from "@google/genai";
 import { BriefingData, Language } from "../types";
 
 export const generateProjectSummary = async (data: BriefingData, lang: Language): Promise<string> => {
-  const apiKey = process.env.API_KEY;
-  if (!apiKey) return "AI Summary unavailable: Missing API Key.";
+  // Always obtain the API key exclusively from process.env.API_KEY
+  if (!process.env.API_KEY) return "AI Summary unavailable: Missing API Key.";
 
-  const ai = new GoogleGenAI({ apiKey });
+  // Initialize client with named parameter apiKey
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   const langMap: Record<Language, string> = {
     en: 'English',
@@ -28,10 +29,12 @@ export const generateProjectSummary = async (data: BriefingData, lang: Language)
   `;
 
   try {
+    // Query GenAI with both the model name and prompt using ai.models.generateContent
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: prompt,
     });
+    // Extract generated text using the .text property (not a method)
     return response.text || "Summary generation failed.";
   } catch (error) {
     console.error("Gemini Error:", error);
